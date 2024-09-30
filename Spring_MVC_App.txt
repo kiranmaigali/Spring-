@@ -1,0 +1,936 @@
+--> Spring MVC App
+
+Controller:
+package Controller;
+
+
+
+import java.util.List;
+
+import java.util.Map;
+
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.stereotype.Controller;
+
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import org.springframework.web.servlet.ModelAndView;
+
+
+
+import model.LoginModel;
+
+import service.LoginService;
+
+
+
+@Controller
+
+public class LoginController {
+
+	@Autowired
+
+	LoginService loginService;
+
+	@RequestMapping(value = "signup", method = RequestMethod.POST)
+
+	public ModelAndView storeUsers(HttpServletRequest req) {
+
+		List<Map<String, Object>> numOfUsers = loginService.retrieveAllProducts();
+
+		int count = numOfUsers.size();
+
+		LoginModel login = new LoginModel();
+
+		login.setEmailId( req.getParameter("emailid"));
+
+		login.setPassword( req.getParameter("password"));
+
+		login.setTypeOfUser(req.getParameter("typeofuser"));
+
+		loginService.storeUser(login);
+
+		List<Map<String, Object>> numOfUsersAfterNewSignUp = loginService.retrieveAllProducts();
+
+		ModelAndView mav = new ModelAndView();
+
+		if(numOfUsersAfterNewSignUp.size() > count) {
+
+		mav.setViewName("success.jsp");
+
+		} else {
+
+			mav.setViewName("failure.jsp");
+
+		}
+
+		return mav;
+
+	}
+
+
+
+	@RequestMapping(value = "signin",method = RequestMethod.POST)  // di for request object 
+
+	public ModelAndView chechUserWithPostMethod(HttpServletRequest req) {
+
+		String emailid = req.getParameter("emailid");
+
+		String password = req.getParameter("password");
+
+		String user = req.getParameter("typeofuser");
+
+		ModelAndView mav = new ModelAndView();
+
+		List<Map<String, Object>> listOfusers = loginService.retrieveAllProducts();
+
+		for(Map<String, Object> mm : listOfusers) {
+
+			if(emailid.equals(mm.get("email")) && password.equals(mm.get("password"))) {
+
+				if(user.equals("admin")) {
+
+					mav.setViewName("display1.jsp");
+
+				}else {
+
+					mav.setViewName("display2.jsp");
+
+				}
+
+			} 
+
+        
+
+        }
+
+		return mav;
+
+	}
+
+
+
+
+
+}
+
+
+Service:
+
+package service;
+
+
+
+import java.util.List;
+
+import java.util.Map;
+
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.stereotype.Service;
+
+
+
+import dao.LoginDao;
+
+import model.LoginModel;
+
+
+
+@Service
+
+public class LoginService {
+
+	@Autowired
+
+	LoginDao loginDao;
+
+	public List<Map<String,Object>> retrieveAllProducts() {
+
+		return loginDao.retrieveAllProducts();
+
+	}
+
+	public void storeUser(LoginModel login) {
+
+		loginDao.storeUser(login);
+
+	}
+
+
+
+}
+
+Dao:
+
+package dao;
+
+import java.util.List;
+
+import java.util.Map;
+
+
+
+
+
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+
+
+import org.springframework.jdbc.core.JdbcTemplate;
+
+
+
+import org.springframework.stereotype.Repository;
+
+
+
+import model.LoginModel;
+
+
+
+@Repository
+
+public class LoginDao {
+
+	@Autowired
+
+	JdbcTemplate jdbcTemplate;
+
+	public int storeUser(LoginModel login) {
+
+		try {
+
+		return jdbcTemplate.update("insert into login values(?,?,?)", login.getEmailId(), login.getPassword(), login.getTypeOfUser());
+
+		} catch (Exception e) {
+
+			System.err.println(e);
+
+			return 0;
+
+		}
+
+		}
+
+	public List<Map<String, Object>> retrieveAllProducts() {
+
+		try {
+
+			return jdbcTemplate.queryForList("select * from login");
+
+		} catch (Exception e) {
+
+			System.err.println(e);
+
+		}
+
+		return null;
+
+	}
+
+
+
+}
+
+Model:
+
+package model;
+
+
+
+
+
+
+
+import org.springframework.stereotype.Component;
+
+
+
+
+
+
+
+@Component
+
+
+
+public class LoginModel {
+
+
+
+	
+
+
+
+	
+
+
+
+	String emailId;
+
+
+
+	String password;
+
+
+
+	String typeOfUser;
+
+
+
+	
+
+
+
+	public LoginModel() {
+
+
+
+		super();
+
+
+
+	}
+
+
+
+	
+
+
+
+
+
+
+
+	
+
+
+
+	public LoginModel(String emailId, String password, String typeOfUser) {
+
+
+
+		super();
+
+
+
+		this.emailId = emailId;
+
+
+
+		this.password = password;
+
+
+
+		this.typeOfUser = typeOfUser;
+
+
+
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	public String getEmailId() {
+
+
+
+		return emailId;
+
+
+
+	}
+
+
+
+	public void setEmailId(String emailId) {
+
+
+
+		this.emailId = emailId;
+
+
+
+	}
+
+
+
+	public String getPassword() {
+
+
+
+		return password;
+
+
+
+	}
+
+
+
+	public void setPassword(String password) {
+
+
+
+		this.password = password;
+
+
+
+	}
+
+
+
+
+
+
+
+	public String getTypeOfUser() {
+
+
+
+		return typeOfUser;
+
+
+
+	}
+
+
+
+	public void setTypeOfUser(String typeOfUser) {
+
+
+
+		this.typeOfUser = typeOfUser;
+
+
+
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	@Override
+
+
+
+	public String toString() {
+
+
+
+		return "Login [emailId=" + emailId + ", password=" + password + ", typeOfUser=" + typeOfUser + "]";
+
+
+
+	}
+
+
+
+	
+
+
+
+	
+
+
+
+	
+
+
+
+	
+
+
+
+	
+
+
+
+	
+
+
+
+	
+
+
+
+	
+
+
+
+	
+
+
+
+
+
+
+
+}
+
+pom.xml
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+
+
+
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+
+
+
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+
+
+
+https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+
+
+  <modelVersion>4.0.0</modelVersion>
+
+
+
+  <groupId>SpringMVCApp</groupId>
+
+
+
+  <artifactId>SpringMVCApp</artifactId>
+
+
+
+  <version>0.0.1-SNAPSHOT</version>
+
+
+
+  <packaging>war</packaging>
+
+
+
+  
+
+
+
+  <dependencies>
+
+
+
+  <dependency>
+
+
+
+    <groupId>org.springframework</groupId>
+
+
+
+    <artifactId>spring-webmvc</artifactId>
+
+
+
+    <version>5.2.12.RELEASE</version>
+
+
+
+</dependency>
+
+
+
+<dependency>
+
+
+
+    <groupId>mysql</groupId>
+
+
+
+    <artifactId>mysql-connector-java</artifactId>
+
+
+
+    <version>8.0.16</version>
+
+
+
+</dependency>
+
+
+
+<!-- https://mvnrepository.com/artifact/org.springframework/spring-jdbc -->
+
+
+
+<dependency>
+
+
+
+    <groupId>org.springframework</groupId>
+
+
+
+    <artifactId>spring-jdbc</artifactId>
+
+
+
+    <version>5.2.12.RELEASE</version>
+
+
+
+</dependency>
+
+
+
+
+
+
+
+</dependencies>
+
+
+
+  <build>
+
+
+
+    <plugins>
+
+
+
+      <plugin>
+
+
+
+        <artifactId>maven-compiler-plugin</artifactId>
+
+
+
+        <version>3.8.1</version>
+
+
+
+        <configuration>
+
+
+
+          <release>11</release>
+
+
+
+        </configuration>
+
+
+
+      </plugin>
+
+
+
+      <plugin>
+
+
+
+        <artifactId>maven-war-plugin</artifactId>
+
+
+
+        <version>3.2.3</version>
+
+
+
+      </plugin>
+
+
+
+    </plugins>
+
+
+
+  </build>
+
+
+
+</project>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1.display1.jsp
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+
+pageEncoding="UTF-8"%>
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Home Page</title>
+
+</head>
+
+<body>
+
+<h2>Hello Admin</h2>
+
+</body>
+
+</html>
+
+
+2.display2.jsp
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+
+pageEncoding="UTF-8"%>
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Home Page</title>
+
+</head>
+
+<body>
+
+<h2>Hello Customer</h2>
+
+</body>
+
+</html>
+
+
+
+3.failure.jsp
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+
+pageEncoding="UTF-8"%>
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Insert title</title>
+
+</head>
+
+<body>
+
+<h2>Failure? try again</h2>
+
+</body>
+
+</html>
+
+
+
+4.index.jsp
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+
+pageEncoding="UTF-8"%>
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Home page</title>
+
+</head>
+
+<body>
+
+<h2>Welcome to Spring MVC APP</h2>
+
+<a href="signup.jsp">SignUp Page</a> |
+
+<a href="login.jsp">SignIn Page</a> |
+
+</body>
+
+</html>
+
+
+5.login.jsp
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+
+pageEncoding="UTF-8"%>
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>LogIn Page</title>
+
+</head>
+
+<body>
+
+
+
+<h2>SignIn Page</h2>
+
+<form action="signin" method="post">
+
+<label>EmailId: </label>
+
+<input type="email" name="emailid"/><br/>
+
+<label>Password: </label>
+
+<input type="password" name="password"/><br/>
+
+<label>User Type: </label>
+
+<input type="text" name= "typeofuser"/><br/>
+
+<input type="submit" value="SignIn"/>
+
+<input type="reset" value="reset"/>
+
+</form>
+
+</body>
+
+</html>
+
+
+
+6.signup.jsp
+
+
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+
+pageEncoding="UTF-8"%>
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>SignUp Page</title>
+
+</head>
+
+<body>
+
+
+
+<h2>Signup User</h2>
+
+<form action="signup" method="post">
+
+<label>EmailId: </label>
+
+<input type="email" name="emailid"/><br/>
+
+<label>Password: </label>
+
+<input type="password" name="password"/><br/>
+
+<label> User Type: </label>
+
+<input type="text" name= "typeofuser"/><br/>
+
+<input type="submit" value="SignIn"/>
+
+</form>
+
+
+
+</body>
+
+</html>
+
+
+
+7.success.jsp
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+
+pageEncoding="UTF-8"%>
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Insert title</title>
+
+</head>
+
+<body>
+
+<h2>Successfully logged in
+
+</h2>
+
+</body>
+
+</html>
+
